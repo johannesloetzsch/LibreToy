@@ -4,13 +4,16 @@ let
   InfOS = builtins.fromJSON (builtins.readFile ./InfOS.json);
 in
 {
+  boot.zfs.devNodes = "/dev/disk/by-partlabel/disk-${InfOS.hostName}-ZFS";
+  networking.hostId = "00012f05";
+
   disko.imageBuilder.extraDependencies = with pkgs; [ exfat ];
   disko.devices = {
     disk = {
       ${InfOS.hostName} = {
         #device = "${InfOS.device}";
         type = "disk";
-        imageSize = "7G";
+        imageSize = "6G";
         content = {
           type = "gpt";
           partitions = {
@@ -32,38 +35,67 @@ in
               };
             };
 
-            NIXOS = {
+            ZFS = {
               priority = 10;
-              size = "3G";
+              size = "5G";
               content = {
-                type = "filesystem";
-                format = "ext4";
-                mountpoint = "/";
-                mountOptions = [ "noatime" "nodiratime" "discard" "barrier=0" ];
-              };
-            };
-            HOME = {
-              priority = 11;
-              size = "1G";
-              content = {
-                type = "filesystem";
-                format = "ext4";
-                mountpoint = "/home";
-                mountOptions = [ "noatime" "nodiratime" "discard" "barrier=0" ];
+                type = "zfs";
+                pool = "zroot";
               };
             };
 
-            EXFAT = {  # ISOs, Win-Share
-              priority = 100;
+#            EXFAT = {  # Win-Share
+#              priority = 100;
+#              size = "10G";
+#              content = {
+#                type = "filesystem";
+#                format = "exfat";
+#                #mountpoint = "/mnt/exfat";
+#                mountOptions = [ "umask=0077" ] ++ [ "nofail" ];
+#              };
+#            };
+
+            EXT2 = {  # ISOs
+              priority = 101;
               size = "100%";
               content = {
                 type = "filesystem";
-                format = "exfat";
-                mountpoint = "/mnt/exfat";
-                mountOptions = [ "umask=0077" ] ++ [ "nofail" ];
+                format = "ext2";
+                #mountpoint = "/mnt/ext2";
+                mountOptions = [ "noatime" "nodiratime" "barrier=0" ];
               };
             };
 
+          };
+        };
+      };
+    };
+    zpool = {
+      zroot = {
+        type = "zpool";
+        rootFsOptions = {
+          mountpoint = "none";
+          compression = "zstd";
+          acltype = "posixacl";
+          xattr = "sa";
+          "com.sun:auto-snapshot" = "true";
+        };
+        options.ashift = "12";
+        datasets = {
+          "root" = {
+            type = "zfs_fs";
+            mountpoint = "/";
+            options.mountpoint = "legacy";
+          };
+          "root/nix/store" = {
+            type = "zfs_fs";
+            mountpoint = "/nix/store";
+            options.mountpoint = "legacy";
+          };
+          "root/home" = {
+            type = "zfs_fs";
+            mountpoint = "/home";
+            options.mountpoint = "legacy";
           };
         };
       };

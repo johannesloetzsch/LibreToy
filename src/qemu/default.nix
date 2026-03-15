@@ -15,7 +15,7 @@ with pkgs; writeShellApplication {
     fi
     tmpFile=$(mktemp /tmp/test-image.XXXXXX)
     trap 'rm -f $tmpFile' EXIT
-    cp "$IMAGE" "$tmpFile" || (echo "This might fail, when $IMAGE is too large" && exit)
+    cp "$IMAGE" "$tmpFile" || (echo "This might fail, when $IMAGE is too large"; false) || exit
     qemu-system-x86_64 \
       -enable-kvm \
       -m 2G \

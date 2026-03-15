@@ -10,6 +10,6 @@
   ];
 
   hardware.enableAllHardware = true;
- 
-  users.users.root.initialPassword = "todo";
+
+  users.users.root.initialPassword = "";
 }
