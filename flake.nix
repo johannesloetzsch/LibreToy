@@ -42,6 +42,8 @@
       "libretoy-dd" = import ./src/dd { inherit pkgs; };
 
       "partition-incremental" = import ./src/disko { inherit pkgs; };
+
+      "libretoy-iso" = nixosConfigurations.${InfOS.hostName}.config.system.build.images.iso-installer;
     };
 
   };

@@ -11,5 +11,5 @@
 
   hardware.enableAllHardware = true;
 
-  users.users.root.initialPassword = "";
+  users.users.root.initialHashedPassword = "";
 }
