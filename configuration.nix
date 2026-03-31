@@ -7,6 +7,7 @@
     ./modules/bootloader/grub
     ./modules/bootloader/grub/isoboot/grub-iso-multiboot.nix
     ./modules/images
+    ./modules/nix
   ];
 
   hardware.enableAllHardware = true;

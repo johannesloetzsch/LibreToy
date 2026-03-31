@@ -1,14 +1,16 @@
-{ pkgs, ... }:
+{ self, pkgs, ... }:
 
 let
   InfOS = builtins.fromJSON (builtins.readFile ../../InfOS.json);
 in
 with pkgs; writeShellApplication {
-  name = "install-bootloader";
+  name = "libretoy-dd";
   runtimeInputs = [
     coreutils  ## dd
     busybox    ## partprobe
     gptfdisk   ## sgdisk gdisk
+
+    self.packages.${InfOS.system}.partition-incremental
   ];
   text = ''
     if [ $# -lt 1 ]; then
@@ -17,14 +19,15 @@ with pkgs; writeShellApplication {
     fi
     DEVICE=$1
 
-    nix build .#disko-image
-    IMAGE="result/${InfOS.hostName}.raw"
+    IMAGE="${self.nixosConfigurations.${InfOS.hostName}.config.system.build.diskoImages}/${InfOS.hostName}.raw"
 
 
     function copy() {
       ## Copy all partitions up to $PARTNAME_LAST
 
       PARTNAME_LAST="disk-${InfOS.hostName}-ESP"  ## The last partition to be copied
+      PARTNUMBER_LAST=$(sgdisk -p $IMAGE | awk -v PARTNAME="$PARTNAME_LAST" '$7 ~ PARTNAME {print $1}')
+
       SECTOR_SIZE=$(sgdisk -p $IMAGE | awk '/Sector size \(logical\)/ {print $4}')
       SECTORS=$(sgdisk -p $IMAGE | awk -v PARTNAME="$PARTNAME_LAST" '$7 ~ PARTNAME {print $3}')
 
@@ -39,5 +42,8 @@ with pkgs; writeShellApplication {
       sgdisk -p "$DEVICE"  ## For debugging
     }
     copy
+
+
+    partition-incremental "$DEVICE" "$PARTNUMBER_LAST"
   '';
 }

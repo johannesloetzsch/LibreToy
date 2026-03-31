@@ -17,7 +17,7 @@ in
     extraEntries = ''
       menuentry "Scan ISOs (using grub-iso-multiboot)" "/grub/autoiso.cfg" {
           savedefault
-          set iso_dirs="/iso"
+          set iso_dirs="/ /iso"
           export iso_dirs
           configfile "$2"
       }

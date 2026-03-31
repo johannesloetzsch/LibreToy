@@ -31,5 +31,10 @@ in
       description = "Sorted partitions (json export)";
     };
 
+
+    "imageLastPartitionName" = lib.mkOption {
+      type = lib.type.string;
+    };
+
   };
 }

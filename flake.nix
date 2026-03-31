@@ -17,6 +17,23 @@
   in
   rec {
 
+    nixosModules = {
+      disko = import ./disko.nix;
+    };
+    
+#    nixosConfigurations."TODO" = libretoySystem {
+#      partitions = {
+#        bootloader = { "EFI".size = "100M"; };
+#        nixos = { "ZFS".size = "10G"; };
+#        misc = { "EXFAT".size = "5G"; "GENODE".size = "100%"; };
+#      };
+#      partitionsSorted = [ … ];
+#      images = …
+#      modules = [
+#        ./configuration.nix
+#      ];
+#    };
+
     nixosConfigurations."${InfOS.hostName}" = nixpkgs.lib.nixosSystem {
       inherit (InfOS) system;
       modules = [
@@ -26,24 +43,13 @@
       ];
     };
 
-    nixosConfigurations."${InfOS.hostName}_iso" = nixpkgs.lib.nixosSystem {
-      ## Usage: nix run nixpkgs#nixos-generators -- -f iso --flake .#infos_iso -o result.iso
-      inherit (InfOS) system;
-      modules = [
-        ./configuration.nix
-      ];
-    };
-
     packages.${InfOS.system} = {
       inherit (pkgs) disko;
       "disko-image" = nixosConfigurations.${InfOS.hostName}.config.system.build.diskoImages;
       "disko-image-test" = import ./src/qemu { inherit pkgs; };
-
-      "libretoy-dd" = import ./src/dd { inherit pkgs; };
-
-      "partition-incremental" = import ./src/disko { inherit pkgs; };
-
+      "libretoy-dd" = import ./src/dd { inherit self pkgs; };
       "libretoy-iso" = nixosConfigurations.${InfOS.hostName}.config.system.build.images.iso-installer;
+      "partition-incremental" = import ./src/disko { inherit pkgs; };
     };
 
   };
