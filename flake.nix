@@ -23,6 +23,7 @@
   rec {
 
     nixosConfigurations."${cfg.networking.hostName}" = nixpkgs.lib.nixosSystem {
+      specialArgs = {inherit self cfg;};
       modules = [
         cfg
         disko.nixosModules.disko ./disko.nix

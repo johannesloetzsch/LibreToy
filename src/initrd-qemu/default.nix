@@ -1,4 +1,4 @@
-{ self, cfg, pkgs }:
+{ self, cfg, pkgs, lib ? pkgs.lib, ... }:
 
 let
   kernel = "${self.nixosConfigurations.${cfg.networking.hostName}.config.system.build.kernel}/bzImage";
@@ -14,6 +14,6 @@ with pkgs; writeShellApplication {
       -m ${ram} \
       -kernel ${kernel} \
       -initrd ${initrd} \
-      -append "loglevel=4 rd.systemd.unit=rescue.target"
+      -append "${lib.concatStringsSep " " self.nixosConfigurations.${cfg.networking.hostName}.config.boot.kernelParams}"
   '';
 }
