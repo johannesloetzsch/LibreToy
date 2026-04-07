@@ -1,10 +1,14 @@
-{ pkgs, ... }:
-{
-  ## Without this fix, the keyboard might not work during systemd-boot, so luks-partitions can't be unlocked.
-  #boot.kernelParams = [ "i8042.nomux=1" "i8042.reset=1" ];
-  boot.kernelParams = [ "i8042.nomux=1" "i8042.reset=1" "rd.systemd.unit=rescue.target" ];
+{ self, cfg, pkgs, ... }:
 
-  boot.initrd.availableKernelModules = [ "e1000" "e1000e" "iwlwifi" ];
+let
+  libretoy-repartition = import ../../src/libretoy-repartition { inherit self cfg pkgs; };
+in
+{
+  imports = [
+    ./hardware.nix
+    ./network.nix
+    ./libretoy-service.nix
+  ];
 
   boot.initrd.systemd = {
     enable = true;
@@ -13,25 +17,18 @@
                              ##   systemd.debug_shell (stage2)        rd.systemd.debug_shell (stage1)        -> (ctrl + alt + F9)
                              ## systemctl only works after `unset TERM`
                              ## networking in stage1 can be started by `systemctl start systemd-networkd`
-
     initrdBin = with pkgs; [
-      busybox
-      util-linux
-      kbd
-      (import ../../src/libretoy-repartition/tmp.nix { inherit pkgs; })
-    ];
+      kbd  ## loadkeys
+      util-linuxMinimal  ## lsblk, … — We need the version used by config.system.build.images.iso-installer
+      busybox  ## optional, could be removed
+    ] ++
+    [ libretoy-repartition ] ++ libretoy-repartition.runtimeInputs;
 
-    #contents = {};  ## TODO /etc/ssl/certs
-
-
+    contents = {
+      "/etc/partitions.json".source = libretoy-repartition.partition_json;
+    };
   };
 
-  boot.initrd.network.enable = true;
-  networking.useDHCP = true;
-
-  boot.initrd.stage1Greeting = ''Welcome to LibreToy
-    This is a multiline greeting :)
-    '';
-
-  #boot.initrd.prepend = [];
+  boot.kernelParams = [ "rd.systemd.unit=libretoy.target" ];
+  boot.initrd.stage1Greeting = "Welcome to LibreToy";
 }

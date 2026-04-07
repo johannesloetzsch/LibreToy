@@ -1,17 +1,20 @@
 { self, cfg, pkgs, ... }:
 
-with pkgs; writeShellApplication {
-  name = "libretoy-repartition";
-  runtimeInputs = [
-    nix
+let
+  partition_json = self.nixosConfigurations.${cfg.networking.hostName}.config.LibreToy.partitions_json;
+  runtimeInputs = with pkgs; [
     gptfdisk  ## fdisk
-    systemdMinimal  ## udevadm
+    systemd  ## udevadm
     e2fsprogs.bin  ## resize2fs
     exfat  ## mkfs.exfat
     fatresize
     dosfstools  ## fatlabel
     jq
   ];
+in
+{ inherit runtimeInputs partition_json; } // pkgs.writeShellApplication {
+  name = "libretoy-repartition";
+  inherit runtimeInputs;
   text = ''
     set -e
 
@@ -25,7 +28,7 @@ with pkgs; writeShellApplication {
     if [ $# -ge 3 ]; then
       PARTITIONS_JSON=$3
     else
-      PARTITIONS_JSON=${self.nixosConfigurations.${cfg.networking.hostName}.config.LibreToy.partitions_json}
+      PARTITIONS_JSON=${partition_json}
     fi
 
     [ -w "$DEVICE" ] || (echo "No permissions to access $DEVICE. You may want use sudo." && exit 1)
