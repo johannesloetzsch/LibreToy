@@ -6,6 +6,7 @@
   imports = [
     ./modules/bootloader/grub
     ./modules/bootloader/grub/isoboot/grub-iso-multiboot.nix
+    ./modules/initrd
     ./modules/images
     ./modules/nix
   ];

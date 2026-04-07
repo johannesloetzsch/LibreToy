@@ -36,6 +36,8 @@
       "diskoImage" = nixosConfigurations.${cfg.networking.hostName}.config.system.build.diskoImages;
       "diskoImage-qemu" = import ./src/diskoImage-qemu { inherit self cfg pkgs; };
 
+      "initrd-qemu" = import ./src/initrd-qemu { inherit self cfg pkgs; };
+
       "iso" = nixosConfigurations.${cfg.networking.hostName}.config.system.build.images.iso-installer;
       "iso-qemu" = import ./src/iso-qemu { inherit self cfg pkgs; };
 
